@@ -1,17 +1,22 @@
 # Flocko Wars
 
-A browser-based real-time territory conquest strategy game.
+World-map territory conquest prototype with dynamically expanding hex territories and a real-time multiplayer lobby.
 
-## Run locally
-Open `index.html` in a modern browser. No API key, build step, or external backend is required.
+## Frontend
+The static client is in `index.html`. It is hosted at https://flocko-wars.onrender.com.
 
-## Gameplay
-- Select one of your cyan territories, then click an adjacent enemy territory to attack.
-- Capture territory, earn gold over time, and build farms, barracks, forts, and factories.
-- Choose a 1, 7, or 30-day campaign and one of three difficulty levels.
-- The game runs locally in the browser; progress is session-based.
+## Lobby server
+- Node.js + Express + Socket.IO
+- Public room discovery, invite codes, ready checks, host handoff and start validation
+- Health endpoint: `/health`
 
-## Deploy on Render
-Create a **Static Site** connected to this repository:
-- Build command: `echo "Static site ready"`
-- Publish directory: `.`
+## Local run
+```bash
+npm install
+npm start
+```
+The client currently targets `https://flocko-wars-server.onrender.com`.
+
+## Deploy
+- Static site: publish directory `.`, build command `echo "Flocko Wars ready"`
+- Web service: build command `npm install`, start command `npm start`, Node runtime.
