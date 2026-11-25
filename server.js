@@ -119,6 +119,15 @@ io.on('connection', socket => {
     io.emit('rooms:list', listRooms());
   });
 
+  socket.on('game:action', payload => {
+    const room = rooms.get(socketRooms.get(socket.id));
+    if (!room || room.status !== 'playing' || room.id !== payload?.roomId) return;
+    const action = payload?.action;
+    if (!action || action.type !== 'attack' || !Number.isInteger(action.from) || !Number.isInteger(action.to)) return;
+    if (!Number.isInteger(action.faction) || action.faction < 0 || action.faction >= room.players.size) return;
+    socket.to(room.id).emit('game:action', { playerId: socket.id, action });
+  });
+
   socket.on('room:leave', () => leave(socket));
   socket.on('disconnect', () => leave(socket));
 });
