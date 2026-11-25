@@ -86,7 +86,7 @@ io.on('connection', socket => {
       id: crypto.randomUUID(), code,
       name: cleanName(payload?.roomName, 'Conquête du monde'),
       hostId: socket.id, maxPlayers: MAX_PLAYERS, status: 'waiting',
-      isPublic: true, createdAt: Date.now(), players: new Map()
+      isPublic: true, createdAt: Date.now(), players: new Map(), factionBySocket: new Map()
     };
     rooms.set(room.id, room);
     join(socket, room, payload?.name);
@@ -114,6 +114,7 @@ io.on('connection', socket => {
     if (room.hostId !== socket.id) return socket.emit('room:error', { message: 'Seul l’hôte peut lancer la partie.' });
     if (![...room.players.values()].every(p => p.ready)) return socket.emit('room:error', { message: 'Tous les joueurs doivent être prêts.' });
     room.status = 'playing';
+    room.factionBySocket = new Map([...room.players.keys()].map((id, index) => [id, index]));
     const game = { room: publicRoom(room), players: [...room.players.values()].map(p => ({ id: p.id, name: p.name })) };
     io.to(room.id).emit('game:start', game);
     io.emit('rooms:list', listRooms());
@@ -123,8 +124,8 @@ io.on('connection', socket => {
     const room = rooms.get(socketRooms.get(socket.id));
     if (!room || room.status !== 'playing' || room.id !== payload?.roomId) return;
     const action = payload?.action;
-    if (!action || !Number.isInteger(action.faction) || action.faction < 0 || action.faction >= room.players.size) return;
-    if (action.type === 'attack' && (!Number.isInteger(action.from) || !Number.isInteger(action.to) || typeof action.ratio !== 'number' || typeof action.roll !== 'number')) return;
+    if (!action || !Number.isInteger(action.faction) || room.factionBySocket?.get(socket.id) !== action.faction) return;
+    if (action.type === 'attack' && (!Number.isInteger(action.from) || !Number.isInteger(action.to) || typeof action.ratio !== 'number' || action.ratio <= 0 || action.ratio > 1 || typeof action.roll !== 'number' || action.roll < 0.85 || action.roll > 1.15)) return;
     if (action.type === 'build' && (!Number.isInteger(action.region) || !['farm', 'barracks', 'fort', 'factory'].includes(action.building))) return;
     if (!['attack', 'build'].includes(action.type)) return;
     socket.to(room.id).emit('game:action', { playerId: socket.id, action });
