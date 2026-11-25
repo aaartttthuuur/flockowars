@@ -123,8 +123,10 @@ io.on('connection', socket => {
     const room = rooms.get(socketRooms.get(socket.id));
     if (!room || room.status !== 'playing' || room.id !== payload?.roomId) return;
     const action = payload?.action;
-    if (!action || action.type !== 'attack' || !Number.isInteger(action.from) || !Number.isInteger(action.to)) return;
-    if (!Number.isInteger(action.faction) || action.faction < 0 || action.faction >= room.players.size) return;
+    if (!action || !Number.isInteger(action.faction) || action.faction < 0 || action.faction >= room.players.size) return;
+    if (action.type === 'attack' && (!Number.isInteger(action.from) || !Number.isInteger(action.to) || typeof action.ratio !== 'number' || typeof action.roll !== 'number')) return;
+    if (action.type === 'build' && (!Number.isInteger(action.region) || !['farm', 'barracks', 'fort', 'factory'].includes(action.building))) return;
+    if (!['attack', 'build'].includes(action.type)) return;
     socket.to(room.id).emit('game:action', { playerId: socket.id, action });
   });
 
